@@ -22,6 +22,12 @@ DEFAULT_WARN_GAP = 1800.0
 # Spec 29 (R2): coordinate comparison tolerance, in degrees.
 COORD_TOLERANCE = 1e-6
 
+# Spec 4.7: a sidecar Lightroom has not written its catalog metadata to carries
+# only a handful of properties. Calibrated against 4,164 real sidecars: genuine
+# Lightroom sidecars hold 78 properties at minimum (median 86, max 501), while
+# unsynced stubs hold 6. The threshold sits in that empty gap.
+STUB_TAG_THRESHOLD = 25
+
 
 class GpsState(Enum):
     """GPS state of a sidecar, as found before the run started."""
@@ -30,6 +36,19 @@ class GpsState(Enum):
     ABSENT = "absent"     # neither -> candidate
     PARTIAL = "partial"   # exactly one -> skip, never donor (spec 4.3)
     INVALID = "invalid"   # out of range -> skip, never donor (spec 6.3)
+
+
+class SidecarHealth(Enum):
+    """Whether Lightroom has written its catalog metadata to a sidecar.
+
+    A STUB or SPARSE sidecar is dangerous not because this tool would damage it,
+    but because the workflow this tool recommends afterwards - Lightroom's
+    "Read Metadata from Files" - would replace catalog metadata with it.
+    """
+
+    OK = "ok"
+    STUB = "stub"      # no capture time and no camera model: never synced
+    SPARSE = "sparse"  # has a timestamp, but implausibly few properties
 
 
 class Result(str, Enum):
@@ -45,6 +64,7 @@ class Result(str, Enum):
     SKIPPED_NO_XMP = "skipped_no_xmp"
     SKIPPED_NO_RAW = "skipped_no_raw"
     SKIPPED_NO_TIME = "skipped_no_time"
+    SKIPPED_STUB_SIDECAR = "skipped_stub_sidecar"
     FAILED = "failed"
 
 
@@ -67,6 +87,7 @@ class Photo:
     raw_lat: float | None = None
     raw_lon: float | None = None
     xmp_alt: float | None = None
+    tag_count: int | None = None
     camera_model: str | None = None
     camera_serial: str | None = None
     error: str | None = None
@@ -85,6 +106,21 @@ class Photo:
         return GpsState.PRESENT
 
     @property
+    def sidecar_health(self) -> SidecarHealth:
+        """Classify how completely Lightroom has written this sidecar (spec 4.7)."""
+        # A sidecar with neither a capture time nor a camera model was never
+        # written by Lightroom Classic.
+        if self.capture_time is None and not self.camera_model:
+            return SidecarHealth.STUB
+        if self.tag_count is not None and self.tag_count < STUB_TAG_THRESHOLD:
+            return SidecarHealth.SPARSE
+        return SidecarHealth.OK
+
+    @property
+    def is_healthy(self) -> bool:
+        return self.sidecar_health is SidecarHealth.OK
+
+    @property
     def raw_has_gps(self) -> bool:
         """True when a RAW is present and carries valid GPS (spec 6.2)."""
         return self.raw_path is not None and valid_coords(self.raw_lat, self.raw_lon)
@@ -92,7 +128,9 @@ class Photo:
     @property
     def is_donor(self) -> bool:
         """Only sidecars with valid pre-run GPS may donate (spec 4.4)."""
-        return self.gps_state is GpsState.PRESENT and self.capture_time is not None
+        return (self.gps_state is GpsState.PRESENT
+                and self.capture_time is not None
+                and self.is_healthy)
 
     @property
     def name(self) -> str:
@@ -140,6 +178,7 @@ class RunConfig:
     copy_altitude: bool = False
     report_dir: Path | None = None
     assume_tz: str = "local"
+    allow_stubs: bool = False
     assume_yes: bool = False
     verbose: bool = False
 

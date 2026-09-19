@@ -4,6 +4,10 @@ Below is a single self-contained Markdown specification that can be handed direc
 
 > **Revision history**
 >
+> **2026-09-19 - Revision 3.** Added section 4.7 (unsynced "stub" sidecars) after finding 514
+> such files across two folders of a real 4,164-sidecar library. Also updated sections 19, 26,
+> 27 and 31. Changes are marked **[R3]**.
+>
 > **2026-09-19 - Revision 2.** Revised after a data-driven review of the specification against a
 > real 804-sidecar sample library and the installed ExifTool 13.55. The review found several
 > contradictions and two safety hazards. Changed sections: 1, 2, 4 (new 4.5 / 4.6), 6, 6.2, 7, 8,
@@ -229,6 +233,63 @@ mechanisms are required:
    intended donor coordinates.
 
 The separate existence assertion of section 4.5 complements these and is not optional.
+
+### 4.7 Unsynced sidecars must never be modified **[R3]**
+
+A sidecar to which Lightroom has never written its catalog metadata is called a **stub**. It
+carries a rating and little else:
+
+```xml
+<x:xmpmeta x:xmptk="XMP Core 5.6.0">
+   <xmp:Rating>1</xmp:Rating>
+   <photoshop:SidecarForExtension>ARW</photoshop:SidecarForExtension>
+```
+
+No capture time, no camera model, no GPS, no develop settings.
+
+#### Why this matters
+
+The danger is not that this tool would damage a stub - it has no timestamp, so it can never be
+matched to a donor. The danger is the workflow this tool **recommends afterwards**. Section 21
+instructs the user to run *Metadata > Read Metadata from Files*. Performed against a stub, that
+replaces rich Lightroom catalog metadata - develop settings, keywords, crops, ratings - with a
+near-empty file. The loss is caused by following the tool's own advice.
+
+A tool that silently skips stubs therefore leads the user into data loss. It must refuse.
+
+#### Detection
+
+Two independent signals, both judged from the sidecar's own parsed content:
+
+1. **Stub** - neither a capture timestamp nor a camera model is present.
+2. **Sparse** - fewer than 25 non-GPS properties.
+
+Calibration against a real library of 4,164 sidecars: genuine Lightroom sidecars carried **78
+properties at minimum** (median 86, maximum 501); stubs carried **6**. Of those files, 514
+classified as stubs and 3,650 as healthy, with **zero ambiguous cases**. The threshold of 25
+sits inside that empty gap.
+
+The check must not consult an adjacent RAW file. A RAW frequently holds a valid timestamp and
+GPS while its sidecar is still an unwritten stub; trusting the RAW would mask exactly the
+condition being detected.
+
+#### Required behaviour
+
+- An apply operation that encounters any unsynced sidecar must **abort before the backup phase**
+  and modify nothing.
+- The message must state the consequence, not merely the condition, and must name the affected
+  folders and the remedy (*Metadata > Save Metadata to Files*).
+- A dry run must **report** the condition but must not abort, so the library can still be
+  diagnosed in full.
+- An unsynced sidecar is never a donor and is never written to, under any flag.
+- An explicit `--allow-stubs` option may permit an apply run to continue, skipping the affected
+  sidecars. It must never cause one to be written.
+
+Reported as:
+
+```text
+SKIPPED: sidecar is missing Lightroom metadata
+```
 
 ---
 
@@ -918,6 +979,7 @@ Each processed photograph should include:
 - **[R2]** whether a RAW file was present (`raw_present`)
 - **[R2]** whether the equal-distance tie-break was applied (`tie_break_applied`)
 - **[R2]** the donor gap tier (`ok` / `warn`)
+- **[R3]** sidecar health (`ok` / `stub` / `sparse`)
 
 **[R2]** The `result` field must distinguish the WARN tier. Permitted values:
 
@@ -930,6 +992,7 @@ skipped_has_gps    sidecar already had GPS
 skipped_partial    inconsistent existing GPS metadata
 skipped_raw_gps    RAW already contains GPS
 skipped_no_xmp     no sidecar
+skipped_stub_sidecar  sidecar missing Lightroom metadata (4.7)  [R3]
 failed             write or verification error
 ```
 
@@ -1347,6 +1410,18 @@ lightroom-gps-repair \
     --apply
 ```
 
+### Continue despite unsynced sidecars **[R3]**
+
+```bash
+lightroom-gps-repair \
+    "/Photos/2026/Texel" \
+    --allow-stubs \
+    --apply
+```
+
+Skips sidecars that are missing their Lightroom metadata instead of aborting. They are still
+never written to.
+
 ### Restore
 
 ```bash
@@ -1378,6 +1453,8 @@ Backup:                   mandatory
 Backup verification:      enabled
 Report generation:        enabled
 Create missing sidecar:   never           [R2]
+Modify unsynced sidecar:  never           [R3]
+Abort on unsynced:        yes (apply)    [R3]
 ```
 
 **[R2]** Measured behaviour of these defaults against the 804-sidecar reference library:
@@ -1574,6 +1651,13 @@ planned `.xmp` sidecars has changed. This includes RAW files, JPEGs, and unrelat
 
 If a sidecar that already contains GPS is forced into the modification plan, the ExifTool `-if`
 guard refuses it and the file remains byte-for-byte unchanged (section 4.6).
+
+### Unsynced sidecars **[R3]**
+
+An apply run against a library containing a stub aborts with exit code 2, creates no backup, and
+modifies no file. A dry run against the same library exits 0 and reports each stub as
+`skipped_stub_sidecar`. A stub adjacent in time to a valid donor is never written, and never
+acts as a donor itself. A genuine Lightroom sidecar is never misclassified.
 
 ### Reference library baseline **[R2]**
 

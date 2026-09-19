@@ -16,7 +16,7 @@ LOG_NAME = "run.log"
 MODIFIED_NAME = "modified_files.txt"
 
 CSV_COLUMNS = [
-    "target_xmp", "target_raw", "target_time", "original_gps_state",
+    "target_xmp", "target_raw", "target_time", "original_gps_state", "sidecar_health",
     "result", "donor_xmp", "donor_time", "time_difference_seconds",
     "latitude", "longitude", "tie_break_applied", "raw_present",
     "backup_path", "reason", "error",
@@ -53,6 +53,7 @@ def _row(entry: PlanEntry) -> dict:
         "target_raw": str(photo.raw_path) if photo.raw_path else "",
         "target_time": _iso(photo.capture_time),
         "original_gps_state": photo.gps_state.value,
+        "sidecar_health": photo.sidecar_health.value,
         "result": entry.result.value,
         "donor_xmp": str(entry.donor.xmp_path) if entry.donor else "",
         "donor_time": _iso(entry.donor.capture_time) if entry.donor else "",
@@ -99,6 +100,8 @@ def write_reports(entries: list[PlanEntry], config: RunConfig, destination: Path
         writer.writerows(rows)
 
     stats = summarize(entries)
+    unhealthy = [e.photo for e in entries if not e.photo.is_healthy]
+    stats = dict(stats, unsynced_sidecars=len(unhealthy))
     payload = {
         "generated": datetime.now().isoformat(timespec="seconds"),
         "mode": "apply" if config.apply else "dry-run",
@@ -116,6 +119,13 @@ def write_reports(entries: list[PlanEntry], config: RunConfig, destination: Path
             "exiftool_version": exiftool_version,
         },
         "summary": stats,
+        "unsynced_by_folder": {
+            str(folder): count for folder, count in sorted(
+                __import__("collections").Counter(
+                    p.xmp_path.parent for p in unhealthy
+                ).items(), key=lambda kv: str(kv[0])
+            )
+        },
         "photos": rows,
     }
     (destination / JSON_NAME).write_text(
@@ -158,6 +168,58 @@ def format_dry_run(entries: list[PlanEntry], verbose: bool = False,
     return "\n".join(lines)
 
 
+def format_stub_warning(unhealthy: list, root: Path, aborting: bool) -> str:
+    """Explain unsynced sidecars and what to do about them (spec 4.7).
+
+    States the consequence, not just the condition: the danger is what
+    Lightroom's "Read Metadata from Files" would do to these files afterwards.
+    """
+    from collections import Counter
+
+    per_folder = Counter(p.xmp_path.parent for p in unhealthy)
+    total = Counter(p.parent for p in _sibling_paths(root))
+
+    lines = [
+        f"{'ERROR' if aborting else 'WARNING'}: {len(unhealthy):,} XMP sidecar(s) "
+        "are missing their Lightroom metadata.",
+        "",
+        "These sidecars contain little more than a rating - no capture time,",
+        "no camera data. Lightroom has not written its catalog metadata to them.",
+        "",
+    ]
+    for folder, count in sorted(per_folder.items(), key=lambda kv: str(kv[0])):
+        try:
+            shown = folder.relative_to(root)
+        except ValueError:
+            shown = folder
+        lines.append(f"  {str(shown):<34} {count:>6,} of {total.get(folder, count):,} sidecars")
+
+    lines += [
+        "",
+        "Repairing GPS now would be unsafe: after this tool runs it asks you to use",
+        '"Metadata > Read Metadata from Files", and doing that on these files would',
+        "REPLACE your Lightroom catalog metadata with near-empty sidecars.",
+        "",
+        "Fix this first:",
+        "",
+        "  1. Open Lightroom Classic.",
+        "  2. Select the affected folders.",
+        "  3. Metadata > Save Metadata to Files  (Cmd+S).",
+        "  4. Wait for it to finish, then re-run this tool.",
+        "",
+    ]
+    if aborting:
+        lines.append("No files were modified.")
+    else:
+        lines.append("These sidecars will be skipped and never written to.")
+    return "\n".join(lines)
+
+
+def _sibling_paths(root: Path):
+    """Every sidecar under root, for the 'n of m' tally."""
+    return sorted(root.rglob("*.xmp")) + sorted(root.rglob("*.XMP"))
+
+
 def format_summary(stats: dict, config: RunConfig, backup_dir: Path | None,
                    report_dir: Path, applied: bool) -> str:
     """End-of-run summary (spec 20)."""
@@ -183,6 +245,7 @@ def format_summary(stats: dict, config: RunConfig, backup_dir: Path | None,
         (Result.SKIPPED_RAW_GPS, "Skipped - RAW already has GPS"),
         (Result.SKIPPED_NO_TIME, "Skipped - no capture time"),
         (Result.SKIPPED_NO_RAW, "Skipped - no RAW file"),
+        (Result.SKIPPED_STUB_SIDECAR, "Skipped - sidecar not synced"),
         (Result.FAILED, "Failed"),
     ]
     for result, label in labels:

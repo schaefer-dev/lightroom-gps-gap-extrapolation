@@ -50,19 +50,53 @@ def config(tmp_path) -> RunConfig:
 
 # --- Synthetic sidecar construction -------------------------------------------------
 
+# Shaped like a real Lightroom sidecar: enough properties to clear the
+# sparse-sidecar threshold (real ones carry 78+; stubs carry 6).
 XMP_TEMPLATE = """<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 7.0">
  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <rdf:Description rdf:about=""
     xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+    xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"
     xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
     xmlns:exif="http://ns.adobe.com/exif/1.0/"
+    xmlns:aux="http://ns.adobe.com/exif/1.0/aux/"
+    xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/"
    xmp:Rating="{rating}"
+   xmp:CreatorTool="ILCE-1M2 v4.00"
+   xmp:MetadataDate="2026-09-19T19:35:06+02:00"
+   xmpMM:DocumentID="urn:uuid:a17e5dc7-d3d6-4baf-a81b-fd1d86550fdd"
+   xmpMM:InstanceID="xmp.iid:2a7fe42d-e998-42d5-bc6e-684095606041"
+   xmpMM:PreservedFileName="{stem}.ARW"
    tiff:Make="SONY"
    tiff:Model="ILCE-1M2"
+   tiff:Orientation="1"
+   tiff:ImageWidth="8640"
+   tiff:ImageLength="5760"
+   exif:ExifVersion="0232"
+   exif:ExposureTime="1/4000"
+   exif:FNumber="56/10"
+   exif:ExposureProgram="4"
+   exif:MeteringMode="5"
+   exif:FocalLength="8400/10"
+   exif:FocalLengthIn35mmFilm="840"
+   exif:ExposureMode="0"
+   exif:WhiteBalance="0"
+   exif:SceneCaptureType="0"
+   exif:Contrast="0"
+   exif:Saturation="0"
+   exif:Sharpness="0"
+   exif:PixelXDimension="8640"
+   exif:PixelYDimension="5760"
+   aux:Lens="FE 600mm F4 GM OSS"
+   aux:LensInfo="8400/10 8400/10 56/10 56/10"
+   photoshop:SidecarForExtension="ARW"
+   photoshop:DateCreated="2026-09-18T12:00:00.000+02:00"
+   dc:format="image/x-sony-arw"
 {extra}   crs:RawFileName="{stem}.ARW">
    <dc:creator><rdf:Seq><rdf:li>Daniel Schaefer</rdf:li></rdf:Seq></dc:creator>
+   <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">Daniel Schaefer</rdf:li></rdf:Alt></dc:rights>
   </rdf:Description>
  </rdf:RDF>
 </x:xmpmeta>

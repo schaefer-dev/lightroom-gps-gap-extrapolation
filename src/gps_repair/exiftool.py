@@ -76,21 +76,28 @@ def _run(args: list[str], argfile_lines: list[str] | None = None,
         target.unlink(missing_ok=True)
 
 
-def read_metadata(paths: list[Path], tmpdir: Path | None = None) -> dict[Path, dict]:
+def read_metadata(paths: list[Path], tmpdir: Path | None = None,
+                  all_tags: bool = False) -> dict[Path, dict]:
     """Bulk-read metadata for many files in as few processes as possible.
 
     Returns a mapping of path -> tag dict. Files ExifTool could not parse come
     back missing or empty; callers must treat that as unreadable rather than
     trusting the exit code (spec 6.0).
+
+    With `all_tags`, every property is read rather than the fixed list, so the
+    caller can judge sidecar completeness (spec 4.7). This stays one process
+    per chunk either way.
     """
     results: dict[Path, dict] = {}
     if not paths:
         return results
 
+    selection = ["-a"] if all_tags else list(READ_TAGS)
+
     for start in range(0, len(paths), READ_CHUNK):
         chunk = paths[start:start + READ_CHUNK]
         proc = _run(
-            ["-j", "-n", "-q", "-G1", "-charset", "filename=utf8", *READ_TAGS],
+            ["-j", "-n", "-q", "-G1", "-charset", "filename=utf8", *selection],
             argfile_lines=[str(p) for p in chunk],
             tmpdir=tmpdir,
         )
@@ -119,9 +126,24 @@ def tag(record: dict, *names: str) -> object | None:
     return None
 
 
+# Groups ExifTool synthesises or that describe the file rather than its content.
+_NON_CONTENT_GROUPS = ("File", "System", "ExifTool", "Composite")
+
+
 def count_tags(record: dict) -> int:
-    """Non-GPS property count, used for the preservation check (spec 29)."""
-    return sum(1 for k in record if "GPS" not in k.split(":")[-1])
+    """Count real, non-GPS properties.
+
+    Used both for the preservation check (spec 29) and for sidecar health
+    (spec 4.7), so it must ignore filesystem and derived groups.
+    """
+    total = 0
+    for key in record:
+        if key.split(":")[0] in _NON_CONTENT_GROUPS:
+            continue
+        if "GPS" in key.split(":")[-1]:
+            continue
+        total += 1
+    return total
 
 
 def write_gps(

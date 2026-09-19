@@ -18,6 +18,8 @@ either side are tagged normally.
    the tool asserts the target exists immediately before each write.
 5. **Repaired coordinates never propagate.** The donor set is frozen before any write, so a
    coordinate written during a run can never become a donor in that same run.
+6. **Unsynced sidecars abort the run.** If Lightroom has not yet written its metadata to a
+   sidecar, the tool refuses to proceed and tells you to run *Save Metadata to Files* first.
 
 ## Install
 
@@ -95,14 +97,41 @@ location — worth a human glance rather than silent acceptance or silent discar
 | `--require-raw` | Skip sidecars with no matching RAW file |
 | `--same-folder-only` / `--same-camera-only` | Narrow the donor pool |
 | `--copy-altitude` | Also copy GPS altitude (off by default) |
+| `--allow-stubs` | Continue despite unsynced sidecars (they are still never written) |
 | `--assume-tz` | Timezone for timestamps without an offset |
 | `--yes` | Skip the confirmation prompt |
+
+## Unsynced sidecars
+
+If a folder was imported but never had *Metadata > Save Metadata to Files* run on it, its
+sidecars are **stubs**: a rating and nothing else - no capture time, no camera data, no develop
+settings.
+
+The tool **aborts an apply run** when it finds any, because the step it recommends afterwards
+(*Read Metadata from Files*) would replace your Lightroom catalog metadata with those near-empty
+files. Dry runs report them without aborting, so you can still survey the library.
+
+```text
+ERROR: 514 XMP sidecar(s) are missing their Lightroom metadata.
+
+  2026-09-16_Texel    377 of 460 sidecars
+  2026-09-17_Texel    137 of 137 sidecars
+
+Fix this first:
+  1. Open Lightroom Classic.
+  2. Select the affected folders.
+  3. Metadata > Save Metadata to Files  (Cmd+S).
+```
+
+Detection is calibrated on real data: genuine Lightroom sidecars carry 78+ properties, stubs
+carry 6. Stubs are never written to and never act as donors, even with `--allow-stubs`.
 
 ## Reports
 
 Each run writes `report.csv`, `report.json`, and `modified_files.txt`. Results use a fixed
 vocabulary: `updated`, `updated_warn`, `skipped_max_gap`, `skipped_no_donor`,
-`skipped_has_gps`, `skipped_partial`, `skipped_raw_gps`, `skipped_no_time`, `failed`.
+`skipped_has_gps`, `skipped_partial`, `skipped_raw_gps`, `skipped_no_time`,
+`skipped_stub_sidecar`, `failed`.
 
 ## Tests
 

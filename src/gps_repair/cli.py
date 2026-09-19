@@ -46,6 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--same-camera-only", action="store_true")
     parser.add_argument("--require-raw", action="store_true",
                         help="skip sidecars with no matching RAW file")
+    parser.add_argument("--allow-stubs", action="store_true",
+                        help="continue even if sidecars are missing their "
+                             "Lightroom metadata (they are still never written)")
     parser.add_argument("--copy-altitude", action="store_true")
     parser.add_argument("--assume-tz", default="local", metavar="TZ",
                         help="timezone for timestamps without an offset "
@@ -128,6 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         same_folder_only=args.same_folder_only,
         same_camera_only=args.same_camera_only,
         require_raw=args.require_raw,
+        allow_stubs=args.allow_stubs,
         copy_altitude=args.copy_altitude,
         report_dir=args.report_dir,
         assume_tz=args.assume_tz,
@@ -171,6 +175,15 @@ def _execute(config: RunConfig, exif_version: str) -> int:
             print(f"SKIP {orphan.name}: no XMP sidecar")
     for key in scan_result.ambiguous:
         print(f"WARNING: ambiguous sidecar association near {key}", file=sys.stderr)
+
+    # --- Spec 4.7: refuse to proceed on an unsynced library ---
+    unhealthy = [p for p in photos if not p.is_healthy]
+    if unhealthy:
+        print()
+        print(report.format_stub_warning(unhealthy, config.root,
+                                         aborting=config.apply and not config.allow_stubs))
+        if config.apply and not config.allow_stubs:
+            return EXIT_ABORTED
 
     dry_run_text = report.format_dry_run(plan, verbose=config.verbose,
                                          planned=not config.apply)

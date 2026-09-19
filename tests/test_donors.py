@@ -186,8 +186,20 @@ def test_donor_set_excludes_candidates():
 
 
 def test_missing_timestamp_is_skipped():
-    p = plan_for([photo("A", 0, **GPS), photo("B", None)])
+    """A synced sidecar that merely lacks a usable timestamp.
+
+    It still carries camera metadata, so it is a timestamp problem rather than
+    an unsynced sidecar (spec 4.7).
+    """
+    orphan_time = photo("B", None, camera_model="ILCE-1M2", tag_count=80)
+    p = plan_for([photo("A", 0, **GPS), orphan_time])
     assert p["B.xmp"].result is Result.SKIPPED_NO_TIME
+
+
+def test_sidecar_without_time_or_camera_is_a_stub():
+    """No timestamp AND no camera model means Lightroom never wrote it."""
+    p = plan_for([photo("A", 0, **GPS), photo("B", None)])
+    assert p["B.xmp"].result is Result.SKIPPED_STUB_SIDECAR
 
 
 def test_raw_with_gps_is_skipped():

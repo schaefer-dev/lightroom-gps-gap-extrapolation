@@ -68,8 +68,12 @@ def build_photos(
     sidecars = scan_result.sidecars
     raws = [raw_for(s, scan_result.raws) for s in sidecars]
 
-    to_read = list(sidecars) + [r for r in raws if r is not None]
-    records = exiftool.read_metadata(to_read, tmpdir=tmpdir)
+    # Sidecars are read in full so their completeness can be judged (spec 4.7);
+    # RAW files only need the fixed tag list.
+    records = exiftool.read_metadata(sidecars, tmpdir=tmpdir, all_tags=True)
+    raw_paths = [r for r in raws if r is not None]
+    if raw_paths:
+        records.update(exiftool.read_metadata(raw_paths, tmpdir=tmpdir))
 
     photos: list[Photo] = []
     for sidecar, raw in zip(sidecars, raws):
@@ -100,6 +104,7 @@ def build_photos(
             xmp_alt=_coord(exiftool.tag(record, "GPSAltitude")),
             raw_lat=_coord(exiftool.tag(raw_record, "GPSLatitude")) if raw_record else None,
             raw_lon=_coord(exiftool.tag(raw_record, "GPSLongitude")) if raw_record else None,
+            tag_count=exiftool.count_tags(record),
             camera_model=exiftool.tag(record, "Model"),
             camera_serial=exiftool.tag(record, "SerialNumber", "BodySerialNumber"),
         ))

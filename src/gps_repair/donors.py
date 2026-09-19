@@ -14,6 +14,7 @@ from datetime import datetime
 
 from .model import (
     GpsState,
+    SidecarHealth,
     Photo,
     PlanEntry,
     Result,
@@ -116,6 +117,16 @@ def _classify(
     if photo.error:
         return PlanEntry(photo, Result.FAILED, error=photo.error,
                          reason=f"could not read metadata: {photo.error}")
+
+    # Spec 4.7: an unsynced sidecar is reported as such, never as a plain
+    # missing-timestamp skip, and is never written to.
+    if not photo.is_healthy:
+        health = photo.sidecar_health.value
+        return PlanEntry(
+            photo, Result.SKIPPED_STUB_SIDECAR,
+            reason=f"sidecar is missing Lightroom metadata ({health}); "
+                   "use Metadata > Save Metadata to Files first",
+        )
 
     state = photo.gps_state
 
