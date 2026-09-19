@@ -1,1 +1,6 @@
 example_files
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*_original

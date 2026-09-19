@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lightroom-gps-repair"
+version = "1.0.0"
+description = "Repair missing GPS coordinates in Lightroom XMP sidecars from the temporally nearest geotagged photo."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+lightroom-gps-repair = "gps_repair.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gps_repair"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["exiftool: requires the exiftool binary"]

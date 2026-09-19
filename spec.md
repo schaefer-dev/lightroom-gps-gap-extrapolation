@@ -2,6 +2,16 @@ Below is a single self-contained Markdown specification that can be handed direc
 
 # Lightroom GPS Gap Repair Tool - Requirements Specification
 
+> **Revision history**
+>
+> **2026-09-19 - Revision 2.** Revised after a data-driven review of the specification against a
+> real 804-sidecar sample library and the installed ExifTool 13.55. The review found several
+> contradictions and two safety hazards. Changed sections: 1, 2, 4 (new 4.5 / 4.6), 6, 6.2, 7, 8,
+> 11, 12, 14, 19, 27, 29, 31. All other sections are unchanged from Revision 1 and were confirmed
+> sound. Changes are marked **[R2]** throughout.
+>
+> **Revision 1.** Original specification.
+
 ## 1. Purpose
 
 The tool shall repair missing GPS coordinates in a Lightroom Classic photo library by copying the GPS coordinates from the temporally nearest photograph that already contains valid GPS information.
@@ -14,6 +24,8 @@ The primary goals are:
 
 - Never overwrite existing GPS metadata.
 - Never modify RAW image files.
+- Never create a new XMP sidecar; only modify sidecars that already exist. **[R2]**
+- Operate on XMP sidecars as the unit of work, with RAW files optional. **[R2]**
 - Back up XMP sidecars before making any change.
 - Use only pre-existing valid GPS coordinates as donor locations.
 - Select the donor photograph based on the smallest capture-time difference.
@@ -49,6 +61,25 @@ Version 1 must support:
 - case-insensitive file extensions such as `.ARW`, `.arw`, `.XMP`, and `.xmp`
 
 The design should make it possible to support additional RAW formats later.
+
+### 2.1 The XMP sidecar is the unit of work **[R2]**
+
+The tool is sidecar-driven. The `.xmp` file is what is scanned, evaluated, and modified.
+
+The presence of a RAW file is **optional**. A library consisting only of XMP sidecars, with no
+RAW files present at all, is explicitly supported and must be processed normally. This reflects
+real usage, where sidecars are frequently reviewed or archived separately from the RAW originals.
+
+When a matching RAW file *is* present, it is used only for the additional safety check in
+section 6.2, and is never written to.
+
+A strict mode may be offered that requires a RAW to be present:
+
+```text
+--require-raw
+```
+
+This is **off** by default.
 
 ---
 
@@ -161,6 +192,43 @@ The program must NOT perform:
 That would allow GPS data to propagate indefinitely.
 
 Only photographs containing valid GPS **before the repair operation started** may be donors.
+
+### 4.5 XMP sidecars must never be created **[R2]**
+
+The tool must only ever modify sidecar files that already exist. It must never bring a new
+sidecar into existence, for any reason.
+
+This rule requires active enforcement, because the underlying metadata tool does not enforce it.
+ExifTool, when given a path that does not exist, will **create** that file rather than fail:
+
+```text
+exiftool -GPSLatitude=53.0 /path/DSC01234.xmp
+    1 image files created
+```
+
+Guarding the write with a condition such as
+`-if 'not $XMP-exif:GPSLatitude and not $XMP-exif:GPSLongitude'` does **not** prevent this: a
+file that does not exist trivially satisfies "has no GPS", and is still created.
+
+Therefore, immediately before each write, the program must assert that the target path exists and
+is a writable regular file. If the target has disappeared between planning and writing, the
+photograph must be reported as failed and no file may be created.
+
+### 4.6 Independent safety locks **[R2]**
+
+Protection against overwriting existing GPS must not depend on a single check. Three independent
+mechanisms are required:
+
+1. **Classification.** Only photographs whose sidecar contains neither latitude nor longitude are
+   admitted to the modification plan.
+2. **Metadata-tool condition.** Each write is additionally guarded by
+   `-if 'not $XMP-exif:GPSLatitude and not $XMP-exif:GPSLongitude'`, so a sidecar that already
+   has GPS is refused by ExifTool itself and left byte-for-byte unchanged, even if the plan were
+   incorrect.
+3. **Post-write verification.** Every modified sidecar is re-read and compared against the
+   intended donor coordinates.
+
+The separate existence assertion of section 4.5 complements these and is not optional.
 
 ---
 
@@ -276,6 +344,18 @@ Reasons include:
 
 A Python program may communicate with ExifTool.
 
+### 6.0 Determining per-file success **[R2]**
+
+Per-file success must be determined by **re-reading the metadata**, never from the exit code of
+the metadata tool. Two verified behaviours make exit codes unreliable:
+
+- A batched invocation writing many files returns a single aggregate exit code. A batch in which
+  one file was written and another was refused by its `-if` condition returns exit 2 overall,
+  which says nothing about any individual file.
+- A malformed or truncated XMP is read with **exit code 0** and simply yields no metadata.
+
+Validity and success must therefore always be judged from parsed metadata content.
+
 ### 6.1 Target GPS detection
 
 Whether a sidecar is eligible for modification must be determined from the XMP sidecar itself.
@@ -291,7 +371,11 @@ An XMP is eligible only when both latitude and longitude are absent.
 
 ### 6.2 Additional RAW safety check
 
-The associated RAW file should also be inspected.
+**[R2]** This check applies **only when a matching RAW file is actually found.** If no RAW is
+present, the check does not apply and the photograph is processed normally on the basis of its
+sidecar alone (see section 2.1).
+
+When a RAW file is present, it should also be inspected.
 
 If the RAW itself already contains valid GPS but the XMP does not, the program should default to:
 
@@ -301,7 +385,7 @@ SKIPPED: source RAW already contains GPS
 
 This is safer than creating potentially redundant or conflicting XMP metadata.
 
-This behavior may later become configurable.
+The RAW is opened strictly read-only. This behavior may later become configurable.
 
 ### 6.3 Donor GPS source
 
@@ -351,9 +435,34 @@ For example:
 SubSecDateTimeOriginal
 ```
 
+**[R2]** In Lightroom-written XMP sidecars, `SubSecDateTimeOriginal` is typically **absent**,
+because `exif:DateTimeOriginal` already carries both subseconds and the UTC offset:
+
+```text
+exif:DateTimeOriginal="2026-09-18T14:43:24.485+02:00"
+```
+
+The resolution order shall therefore be:
+
+1. `SubSecDateTimeOriginal` if present
+2. `DateTimeOriginal` (the normal case)
+3. `xmp:CreateDate` as a fallback
+
+A photograph for which none of these yields a usable timestamp must be skipped and reported.
+
 Timezone information should be used if present.
 
 For photographs from the same camera and shooting session, timestamps without explicit timezone information may be treated as belonging to the same local camera time domain.
+
+**[R2]** Timestamps lacking an explicit offset shall be interpreted in a single configurable
+timezone:
+
+```text
+--assume-tz
+```
+
+defaulting to the system local timezone. The assumption in force must be recorded in the report.
+Timestamps must never be compared across mixed naive and aware representations.
 
 The implementation must use a consistent timestamp representation internally.
 
@@ -363,16 +472,20 @@ The implementation must use a consistent timestamp representation internally.
 
 A photograph is a repair candidate only when all of the following conditions are true:
 
-1. A supported RAW file exists.
-2. A corresponding XMP sidecar exists.
-3. The XMP contains neither GPS latitude nor GPS longitude.
-4. The RAW does not already contain valid GPS.
-5. A valid capture timestamp can be determined.
-6. At least one valid donor exists within the configured maximum time difference.
+1. An XMP sidecar exists. **[R2]** This is the unit of work.
+2. The XMP contains neither GPS latitude nor GPS longitude.
+3. **[R2]** A corresponding RAW file *may* exist. If one is present, it must not already contain
+   valid GPS (section 6.2). If none is present, this condition is satisfied automatically.
+4. A valid capture timestamp can be determined.
+5. At least one valid donor exists within the configured maximum donor gap (section 11).
+
+**[R2]** Under `--require-raw`, an additional condition applies: a supported RAW file must exist,
+and a sidecar without one is skipped with `SKIPPED: no RAW file`. This flag is off by default.
 
 If any requirement fails, the photograph must be skipped and included in the report.
 
-The initial version should not create new XMP files for photographs that have no sidecar.
+The initial version must never create new XMP files for photographs that have no sidecar
+(section 4.5).
 
 Example:
 
@@ -453,44 +566,68 @@ The selected tie-breaking rule must be documented in the report.
 
 ---
 
-## 11. Maximum Time Difference
+## 11. Maximum Time Difference **[R2 - rewritten]**
 
 The tool must support a configurable maximum donor time difference.
 
-Recommended default:
+**[R2]** Revision 1 specified a single 120-second threshold. Measured against the reference
+library of 804 sidecars, that default repaired only 48 of 103 gaps (47 %), because the median gap
+to the nearest donor was 152 seconds. A single hard threshold also treats a 3-minute gap and a
+3-hour gap identically, discarding both without comment.
+
+Revision 2 therefore defines **three tiers**:
+
+| Gap to nearest valid donor | Action |
+|---|---|
+| less than or equal to `--max-gap` (default 600 s / 10 min) | Apply silently |
+| between `--max-gap` and `--warn-gap` (default 1800 s / 30 min) | Apply, and emit a **WARN** |
+| greater than `--warn-gap` (default 1800 s / 30 min) | **Skip.** Never used as a donor |
 
 ```text
-120 seconds
+--max-gap 600
+--warn-gap 1800
 ```
 
-Example:
+### 11.1 The WARN tier
+
+A coordinate in the WARN tier is still applied, but the photograph must be clearly flagged so a
+human can review it. At these distances the donor may represent a genuinely different location.
+
+Console output:
 
 ```text
---max-gap 120
+WARN  DSC09660.ARW  donor is 1095 s (18.2 min) away - please review manually
 ```
 
-A candidate whose nearest valid donor is farther away than the configured threshold must not be changed.
+Every WARN photograph must be:
 
-Example:
+- printed to the console during the run
+- marked in `report.csv` and `report.json` with result `updated_warn`
+- counted separately in the end-of-run summary
+- listed in the generated file of modified images
+
+### 11.2 The skip tier
+
+A candidate whose nearest valid donor is farther away than `--warn-gap` must not be changed.
 
 ```text
 15:00:00 GPS
-15:14:00 missing
-```
-
-with:
-
-```text
-max-gap = 120 seconds
+17:30:00 missing
 ```
 
 Result:
 
 ```text
-SKIPPED: nearest GPS donor is 840 seconds away
+SKIPPED: nearest GPS donor is 9000 seconds away
 ```
 
-There must be no unlimited matching mode enabled by default.
+There must be no unlimited matching mode enabled by default. Setting `--warn-gap` to a very large
+value is possible but must be an explicit, deliberate act by the user.
+
+### 11.3 Constraints
+
+`--max-gap` must be less than or equal to `--warn-gap`; otherwise the program exits with a usage
+error. Setting them equal disables the WARN tier and restores strict two-tier behaviour.
 
 ---
 
@@ -526,6 +663,21 @@ Example:
 ```
 
 This can be useful when several cameras are used simultaneously.
+
+**[R2]** Lightroom-written sidecars do not necessarily carry a serial number at all. In the
+reference library of 804 sidecars, no `SerialNumber` tag was present in any file, so this option
+would have silently grouped every photograph into a single anonymous bucket - appearing to apply
+a restriction while applying none.
+
+Therefore, if `--same-camera-only` is requested and serial information cannot be determined, the
+program must **exit with a clear error** rather than proceed:
+
+```text
+ERROR: --same-camera-only requested, but no camera serial number
+       is available in the scanned metadata.
+```
+
+Silently degrading to unrestricted matching is forbidden.
 
 ---
 
@@ -590,6 +742,28 @@ It should update the existing XMP packet using a metadata-aware tool such as Exi
 Semantic metadata preservation is required.
 
 Byte-for-byte preservation of the XML serialization is not required.
+
+### 14.1 Observed serialization changes **[R2]**
+
+This subsection records verified behaviour so it is not mistaken for corruption later.
+
+When ExifTool writes a Lightroom sidecar, it rewrites the XMP packet:
+
+- attribute-form properties (`exif:FNumber="56/10"`) become element-form
+  (`<exif:FNumber>56/10</exif:FNumber>`)
+- the file grows by roughly 50 %
+- properties are re-ordered, grouped by namespace
+- `x:xmptk` changes from `Adobe XMP Core ...` to `Image::ExifTool ...`
+
+A tag-by-tag comparison of a representative sidecar before and after writing confirmed that all
+91 unrelated properties were preserved with identical values - ratings, crop, develop settings,
+keywords, copyright, and the `xmpMM:History` block included. The only differences were the added
+GPS properties and the toolkit identifier.
+
+This satisfies the semantic-preservation requirement above and is explicitly accepted. Lightroom
+reads the resulting sidecars normally.
+
+Coordinate round-trip precision was measured at better than one millimetre and is not a concern.
 
 ---
 
@@ -685,16 +859,20 @@ Before modifying XMPs, the tool should display a summary such as:
 ```text
 Scan complete.
 
-RAW photographs:                  18,492
+Photographs scanned:              18,492
 Existing GPS photographs:         17,841
 Missing GPS candidates:              651
 Eligible for automatic repair:       623
+  of which flagged WARN:              17
 Skipped:                              28
 
-Maximum donor gap:                  120 s
+Maximum donor gap:                  600 s
+Warn donor gap:                    1800 s
 
 623 XMP files will be modified.
 623 XMP files will first be backed up.
+
+17 of these have a donor in the WARN band and should be reviewed afterwards.
 
 Lightroom Classic must be closed.
 
@@ -737,6 +915,23 @@ Each processed photograph should include:
 - modification result
 - reason if skipped
 - error message if failed
+- **[R2]** whether a RAW file was present (`raw_present`)
+- **[R2]** whether the equal-distance tie-break was applied (`tie_break_applied`)
+- **[R2]** the donor gap tier (`ok` / `warn`)
+
+**[R2]** The `result` field must distinguish the WARN tier. Permitted values:
+
+```text
+updated            coordinate applied, donor within --max-gap
+updated_warn       coordinate applied, donor in the WARN band - review manually
+skipped_max_gap    nearest donor beyond --warn-gap
+skipped_no_donor   no valid donor at all
+skipped_has_gps    sidecar already had GPS
+skipped_partial    inconsistent existing GPS metadata
+skipped_raw_gps    RAW already contains GPS
+skipped_no_xmp     no sidecar
+failed             write or verification error
+```
 
 Example CSV:
 
@@ -744,8 +939,13 @@ Example CSV:
 target,donor,time_difference_seconds,latitude,longitude,result
 DSC01234.ARW,DSC01235.ARW,2.41,53.123456,4.812345,updated
 DSC04412.ARW,DSC04411.ARW,8.73,53.124001,4.811932,updated
-DSC09201.ARW,,318.22,,,skipped_max_gap
+DSC09660.ARW,DSC09659.ARW,1094.98,53.021110,4.762030,updated_warn
+DSC09201.ARW,,9000.00,,,skipped_max_gap
 ```
+
+**[R2]** The report header must also record the tie-breaking rule in force (section 10), the
+configured `--max-gap` and `--warn-gap`, the naive-timestamp assumption (section 7), and the
+ExifTool version used.
 
 ---
 
@@ -763,6 +963,7 @@ Already geotagged:               17,841
 Missing GPS:                        651
 
 Successfully repaired:              623
+  of which flagged WARN:              17
 Skipped - donor too far away:        19
 Skipped - no valid donor:              4
 Skipped - inconsistent GPS:           2
@@ -926,11 +1127,14 @@ GPS A is irrelevant despite appearing earlier in the sorted library.
 14:00:00 missing
 ```
 
-with:
+with the default gaps:
 
 ```text
-max gap = 120 seconds
+--max-gap 600     (10 min)
+--warn-gap 1800   (30 min)
 ```
+
+The nearest donor is 7200 seconds away, beyond `--warn-gap`.
 
 Result:
 
@@ -938,7 +1142,7 @@ Result:
 SKIPPED
 ```
 
-No location should be guessed.
+No location should be guessed. **[R2]**
 
 ---
 
@@ -966,21 +1170,30 @@ Original state:
 12:03:00 missing
 ```
 
-with:
+with explicitly narrowed gaps, chosen to isolate the propagation question:
 
 ```text
-max gap = 90 seconds
+--max-gap 90 --warn-gap 90
 ```
 
 Expected result:
 
 ```text
-12:01:00 -> GPS A
-12:02:00 -> SKIP
-12:03:00 -> SKIP
+12:01:00 -> GPS A     (60 s from the original donor)
+12:02:00 -> SKIP      (120 s from the original donor)
+12:03:00 -> SKIP      (180 s from the original donor)
 ```
 
 The generated GPS at 12:01 must not become a new donor.
+
+**[R2]** This scenario deliberately overrides the default gaps. Under the defaults
+(`--max-gap 600`) all three photographs would legitimately be repaired **directly from GPS A**,
+which is correct and is not propagation: every donor distance is still measured against the
+original, pre-run donor set.
+
+The invariant being tested is independent of the thresholds: the donor set is frozen before any
+write, so a coordinate written during the run can never serve as a donor within that same run.
+A correct implementation must never produce the chain `12:01 -> 12:02 -> 12:03`.
 
 ---
 
@@ -1011,7 +1224,7 @@ candidates = [
     photo
     for photo in photos
     if photo.xmp_has_no_gps
-    and photo.raw_has_no_gps
+    and (photo.raw is None or photo.raw_has_no_gps)   # [R2] RAW optional
 ]
 
 sort original_donors by capture_time
@@ -1025,8 +1238,11 @@ for candidate in candidates:
     if no donor:
         skip
 
-    elif time_difference > max_gap:
+    elif time_difference > warn_gap:      # [R2] beyond the outer tier
         skip
+
+    elif time_difference > max_gap:       # [R2] WARN band
+        schedule GPS copy, flagged WARN
 
     else:
         schedule GPS copy
@@ -1092,12 +1308,24 @@ lightroom-gps-repair \
     --apply
 ```
 
-### Custom maximum gap
+### Custom donor gaps **[R2]**
 
 ```bash
 lightroom-gps-repair \
     "/Photos/2026/Texel" \
-    --max-gap 60 \
+    --max-gap 300 \
+    --warn-gap 900 \
+    --apply
+```
+
+Apply silently up to 5 minutes, apply with a warning up to 15 minutes, skip beyond that.
+
+### Require a RAW file to be present **[R2]**
+
+```bash
+lightroom-gps-repair \
+    "/Photos/2026/Texel" \
+    --require-raw \
     --apply
 ```
 
@@ -1134,7 +1362,9 @@ Recommended defaults:
 
 ```text
 Mode:                     dry-run
-Maximum donor gap:        120 seconds
+Maximum donor gap:        600 seconds     [R2]
+Warn donor gap:           1800 seconds    [R2]
+Require RAW file:         no              [R2]
 Donor scope:              selected root recursively
 Same-folder restriction:  off
 Same-camera restriction:  off
@@ -1147,6 +1377,19 @@ Modify RAW files:         never
 Backup:                   mandatory
 Backup verification:      enabled
 Report generation:        enabled
+Create missing sidecar:   never           [R2]
+```
+
+**[R2]** Measured behaviour of these defaults against the 804-sidecar reference library:
+
+```text
+Scanned:                     804
+Already geotagged:           701
+Missing GPS:                 103
+
+Repaired (within 600 s):      99
+Repaired with WARN:            4
+Skipped:                       0
 ```
 
 ---
@@ -1182,9 +1425,17 @@ After updating an XMP, the tool should read the metadata again and verify:
 
 1. Latitude exists.
 2. Longitude exists.
-3. Latitude matches the intended donor value.
-4. Longitude matches the intended donor value.
-5. Critical unrelated metadata remains readable.
+3. Latitude matches the intended donor value, within a tolerance of `1e-6` degrees. **[R2]**
+4. Longitude matches the intended donor value, within a tolerance of `1e-6` degrees. **[R2]**
+5. Critical unrelated metadata remains readable. **[R2]** This is defined concretely as:
+   - the count of non-GPS properties has not decreased relative to the pre-write reading
+   - `DateTimeOriginal` is still readable and unchanged
+   - `tiff:Model` is still readable and unchanged
+   - the file parses as well-formed XMP and is not empty
+
+**[R2]** Verification must be performed by re-reading the written files, never by inspecting the
+exit code of the write command (section 6.0). A single bulk re-read of all modified files is the
+preferred implementation.
 
 If verification fails, the file must be marked as failed.
 
@@ -1296,6 +1547,44 @@ Unrelated Lightroom metadata remains unchanged after GPS insertion.
 ### Dry run
 
 A dry run produces the same planned donor decisions as an apply run but modifies zero existing files.
+
+### WARN tier **[R2]**
+
+A candidate whose nearest donor lies between `--max-gap` and `--warn-gap` is repaired, reported
+as `updated_warn`, printed as a WARN line, and counted separately in the summary.
+
+A candidate whose nearest donor lies beyond `--warn-gap` is not modified.
+
+Boundary behaviour is exact: a gap of precisely `--max-gap` applies silently, and a gap of
+precisely `--warn-gap` applies with a warning.
+
+### Sidecars are never created **[R2]**
+
+If a planned sidecar is removed between the planning phase and the write phase, the run reports
+it as failed and **no file is created** at that path.
+
+Running the tool against a directory containing no sidecars creates nothing.
+
+### Only XMP files are touched **[R2]**
+
+After an apply run, a checksum sweep of the entire scan root shows that no file other than the
+planned `.xmp` sidecars has changed. This includes RAW files, JPEGs, and unrelated sidecars.
+
+### Existing GPS survives an intentionally wrong plan **[R2]**
+
+If a sidecar that already contains GPS is forced into the modification plan, the ExifTool `-if`
+guard refuses it and the file remains byte-for-byte unchanged (section 4.6).
+
+### Reference library baseline **[R2]**
+
+Against the 804-sidecar reference library, with default settings:
+
+```text
+804 scanned, 701 already geotagged, 103 missing
+-> 99 repaired, 4 repaired with WARN, 0 skipped
+```
+
+and all 701 previously geotagged sidecars are byte-for-byte identical afterwards.
 
 ---
 
