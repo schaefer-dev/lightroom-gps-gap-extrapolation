@@ -46,7 +46,7 @@ The initial implementation shall target the following structure:
 ```text
 Photo Library/
 ├── 2026/
-│   ├── Texel/
+│   ├── Coast/
 │   │   ├── DSC00001.ARW
 │   │   ├── DSC00001.xmp
 │   │   ├── DSC00002.ARW
@@ -328,7 +328,7 @@ LightroomGPSBackup/
     ├── manifest.json
     └── files/
         └── 2026/
-            └── Texel/
+            └── Coast/
                 ├── DSC01234.xmp
                 ├── DSC01592.xmp
                 └── ...
@@ -369,8 +369,8 @@ Example manifest entry:
 
 ```json
 {
-  "original": "/Photos/2026/Texel/DSC01234.xmp",
-  "backup": "/Backup/2026-09-19_193500/files/2026/Texel/DSC01234.xmp",
+  "original": "/Photos/2026/Coast/DSC01234.xmp",
+  "backup": "/Backup/2026-09-19_193500/files/2026/Coast/DSC01234.xmp",
   "size": 18342,
   "sha256": "..."
 }
@@ -699,7 +699,7 @@ The donor search shall be limited to photographs within the selected scan root.
 Example:
 
 ```text
-gps-repair scan "/Photos/2026/Texel"
+gps-repair scan "/Photos/2026/Coast"
 ```
 
 Photographs outside that root shall not participate.
@@ -864,7 +864,7 @@ Dry run should be the default behavior unless an explicit apply argument is supp
 Example:
 
 ```bash
-gps-repair "/Photos/2026/Texel"
+gps-repair "/Photos/2026/Coast"
 ```
 
 should perform analysis only.
@@ -872,7 +872,7 @@ should perform analysis only.
 An actual modification should require an explicit command such as:
 
 ```bash
-gps-repair "/Photos/2026/Texel" --apply
+gps-repair "/Photos/2026/Coast" --apply
 ```
 
 Dry-run mode must not:
@@ -1352,14 +1352,14 @@ Libraries containing tens or hundreds of thousands of photographs should therefo
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel"
+    "/Photos/2026/Coast"
 ```
 
 Equivalent explicit form:
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --dry-run
 ```
 
@@ -1367,7 +1367,7 @@ lightroom-gps-repair \
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --apply
 ```
 
@@ -1375,7 +1375,7 @@ lightroom-gps-repair \
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --max-gap 300 \
     --warn-gap 900 \
     --apply
@@ -1387,7 +1387,7 @@ Apply silently up to 5 minutes, apply with a warning up to 15 minutes, skip beyo
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --require-raw \
     --apply
 ```
@@ -1396,7 +1396,7 @@ lightroom-gps-repair \
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --backup-dir "/Backups/LightroomGPS" \
     --apply
 ```
@@ -1405,7 +1405,7 @@ lightroom-gps-repair \
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --same-camera-only \
     --apply
 ```
@@ -1414,7 +1414,7 @@ lightroom-gps-repair \
 
 ```bash
 lightroom-gps-repair \
-    "/Photos/2026/Texel" \
+    "/Photos/2026/Coast" \
     --allow-stubs \
     --apply
 ```

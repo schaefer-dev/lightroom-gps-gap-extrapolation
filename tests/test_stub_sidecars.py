@@ -225,8 +225,8 @@ def test_stub_not_rescued_by_adjacent_raw(tmp_path):
 @requires_exiftool
 def test_mixed_folder_counts_correctly(tmp_path, capsys):
     """The real case: stubs and healthy sidecars side by side in one folder."""
-    root = tmp_path / "2026-09_Texel"
-    day = root / "2026-09-16_Texel"
+    root = tmp_path / "2026-09_Coast"
+    day = root / "2026-09-16_Coast"
     day.mkdir(parents=True)
     for i in range(5):
         shutil.copy2(STUB_FIXTURE, day / f"stub_{i}.xmp")
@@ -234,7 +234,7 @@ def test_mixed_folder_counts_correctly(tmp_path, capsys):
 
     assert run(str(root), "--apply", "--yes", "--backup-dir", str(tmp_path / "bk")) == 2
     out = capsys.readouterr().out
-    assert "5" in out and "2026-09-16_Texel" in out
+    assert "5" in out and "2026-09-16_Coast" in out
 
 
 @requires_exiftool

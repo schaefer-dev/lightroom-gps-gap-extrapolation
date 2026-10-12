@@ -108,7 +108,7 @@ def test_scan_pairs_case_insensitively(tmp_path):
 
 
 def test_scan_is_recursive(tmp_path):
-    nested = tmp_path / "2026" / "Texel"
+    nested = tmp_path / "2026" / "Coast"
     nested.mkdir(parents=True)
     (nested / "A.xmp").write_text("x")
     assert len(scan(tmp_path).sidecars) == 1

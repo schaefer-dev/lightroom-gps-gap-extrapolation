@@ -6,11 +6,28 @@ build-backend = "hatchling.build"
 name = "lightroom-gps-repair"
 version = "1.0.0"
 description = "Repair missing GPS coordinates in Lightroom XMP sidecars from the temporally nearest geotagged photo."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Daniel Schäfer" }]
 requires-python = ">=3.10"
+keywords = ["lightroom", "gps", "geotagging", "xmp", "exiftool", "photography"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Graphics",
+]
 dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/schaefer-dev/lightroom-gps-gap-extrapolation"
+Issues = "https://github.com/schaefer-dev/lightroom-gps-gap-extrapolation/issues"
 
 [project.scripts]
 lightroom-gps-repair = "gps_repair.cli:main"

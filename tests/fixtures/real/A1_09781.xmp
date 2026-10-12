@@ -56,8 +56,8 @@
    exif:FocalPlaneYResolution="78794663/32768"
    exif:FocalPlaneResolutionUnit="3"
    exif:GPSVersionID="2.3.0.0"
-   exif:GPSLatitude="53,1.7082N"
-   exif:GPSLongitude="4,49.1179167E"
+   exif:GPSLatitude="50,1.7082N"
+   exif:GPSLongitude="10,49.1179167E"
    exif:GPSTimeStamp="2026-09-18T12:21:00Z"
    exif:GPSStatus="A"
    exif:GPSMeasureMode="2"
@@ -108,12 +108,12 @@
     exif:RedEyeMode="False"/>
    <dc:creator>
     <rdf:Seq>
-     <rdf:li>Daniel Schaefer</rdf:li>
+     <rdf:li>Example Photographer</rdf:li>
     </rdf:Seq>
    </dc:creator>
    <dc:rights>
     <rdf:Alt>
-     <rdf:li xml:lang="x-default">Daniel Schaefer</rdf:li>
+     <rdf:li xml:lang="x-default">Example Photographer</rdf:li>
     </rdf:Alt>
    </dc:rights>
   </rdf:Description>

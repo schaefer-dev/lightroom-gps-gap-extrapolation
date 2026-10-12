@@ -1,7 +1,7 @@
 # Stub sidecar fixtures
 
-`stub_rating_only.xmp` is a verbatim reproduction of a sidecar observed in
-`/Users/daniel/Pictures/2026/2026-09_Texel/2026-09-16_Texel` on 2026-09-19.
+`stub_rating_only.xmp` is a verbatim reproduction of a sidecar observed in a
+real Lightroom Classic library folder on 2026-09-19.
 
 514 such files were present across two folders. They are written by
 `XMP Core 5.6.0` (not Lightroom Classic) and carry only a star rating: no

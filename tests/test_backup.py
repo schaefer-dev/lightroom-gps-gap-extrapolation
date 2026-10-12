@@ -15,7 +15,7 @@ from gps_repair.backup import (
 
 @pytest.fixture
 def library(tmp_path):
-    lib = tmp_path / "lib" / "2026" / "Texel"
+    lib = tmp_path / "lib" / "2026" / "Coast"
     lib.mkdir(parents=True)
     for name in ("A.xmp", "B.xmp"):
         (lib / name).write_text(f"contents of {name}", encoding="utf-8")
@@ -35,7 +35,7 @@ def test_backup_copies_and_verifies(library, tmp_path):
 def test_backup_preserves_relative_structure(library, tmp_path):
     """Spec 5.2."""
     create_backup(sorted(library.rglob("*.xmp")), library, tmp_path / "bk")
-    assert (tmp_path / "bk" / "files" / "2026" / "Texel" / "A.xmp").is_file()
+    assert (tmp_path / "bk" / "files" / "2026" / "Coast" / "A.xmp").is_file()
 
 
 def test_manifest_is_written_and_loadable(library, tmp_path):

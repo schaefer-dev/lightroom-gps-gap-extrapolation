@@ -95,8 +95,8 @@ XMP_TEMPLATE = """<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 7.
    photoshop:DateCreated="2026-09-18T12:00:00.000+02:00"
    dc:format="image/x-sony-arw"
 {extra}   crs:RawFileName="{stem}.ARW">
-   <dc:creator><rdf:Seq><rdf:li>Daniel Schaefer</rdf:li></rdf:Seq></dc:creator>
-   <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">Daniel Schaefer</rdf:li></rdf:Alt></dc:rights>
+   <dc:creator><rdf:Seq><rdf:li>Example Photographer</rdf:li></rdf:Seq></dc:creator>
+   <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">Example Photographer</rdf:li></rdf:Alt></dc:rights>
   </rdf:Description>
  </rdf:RDF>
 </x:xmpmeta>
@@ -128,7 +128,7 @@ def library(tmp_path) -> Path:
     lib = tmp_path / "lib"
     lib.mkdir()
     write_xmp(lib / "A.xmp", "2026-09-18T12:00:00.000+02:00",
-              lat="53,0.5266833N", lon="4,45.65015E")
+              lat="50,0.5266833N", lon="10,45.65015E")
     write_xmp(lib / "B.xmp", "2026-09-18T12:00:03.000+02:00")
     write_xmp(lib / "C.xmp", "2026-09-18T12:00:05.000+02:00",
               lat="53,1.0000000N", lon="4,46.0000000E")

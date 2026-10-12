@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" role="img" aria-label="Lightroom GPS Gap Repair: photos without GPS get coordinates from the temporally nearest geotagged photo">
+<defs><marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#e8590c"/></marker></defs>
+<rect width="1280" height="440" rx="18" fill="#faf8f3"/>
+<text x="64" y="84" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="42" font-weight="700" fill="#1d2433" letter-spacing="-0.5">Lightroom GPS Gap Repair</text>
+<text x="64" y="120" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" fill="#6b7280">Fill missing GPS from the nearest geotagged shot, safely.</text>
+<g transform="translate(880,76)"><g transform="translate(0,10)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g><text x="20" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#6b7280">geotagged</text></g>
+<g transform="translate(1010,76)"><g transform="translate(0,10)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#e8590c"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g><text x="20" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#6b7280">repaired</text></g>
+<g transform="translate(1132,76)"><rect x="-10" y="-14" width="20" height="16" rx="3" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-dasharray="4 3"/><text x="20" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#6b7280">skipped</text></g>
+<line x1="64" y1="318" x2="1078" y2="318" stroke="#cfc9bc" stroke-width="2"/>
+<line x1="1098" y1="318" x2="1216" y2="318" stroke="#cfc9bc" stroke-width="2"/>
+<path d="M1074,327 L1084,309 M1092,327 L1102,309" stroke="#6b7280" stroke-width="2"/>
+<g transform="translate(120,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:42:51</text>
+</g>
+<g transform="translate(120,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(220,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:42:58</text>
+</g>
+<g transform="translate(220,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(320,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:06</text>
+</g>
+<g transform="translate(320,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(450,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#e8590c"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:14</text>
+</g>
+<g transform="translate(450,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#e8590c"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(540,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#e8590c"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:19</text>
+</g>
+<g transform="translate(540,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#e8590c"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(680,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#e8590c" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#e8590c"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:27</text>
+</g>
+<g transform="translate(680,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#e8590c"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(800,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:34</text>
+</g>
+<g transform="translate(800,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(900,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:40</text>
+</g>
+<g transform="translate(900,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(1000,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#1d2433" stroke-width="2"/>
+  <circle cx="-12" cy="11" r="4" fill="#6b7280" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#6b7280" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#1d2433"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">14:43:47</text>
+</g>
+<g transform="translate(1000,244)"><path d="M0,0 C-4,-8 -11,-12 -11,-20 A11,11 0 1 1 11,-20 C11,-12 4,-8 0,0 Z" fill="#2563eb"/><circle cy="-20" r="4.2" fill="#faf8f3"/></g>
+<g transform="translate(1170,252)">
+  <rect x="-26" y="0" width="52" height="38" rx="6" fill="#ffffff" stroke="#a3a3a3" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="-12" cy="11" r="4" fill="#a3a3a3" opacity="0.7"/>
+  <path d="M-20,32 L-6,18 L4,27 L10,21 L20,32 Z" fill="#a3a3a3" opacity="0.55"/>
+  <line x1="0" y1="38" x2="0" y2="66" stroke="#cfc9bc" stroke-width="2"/>
+  <circle cx="0" cy="66" r="4" fill="#a3a3a3"/>
+  <text x="0" y="92" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">15:31:02</text>
+</g>
+<path d="M320,210 Q385.0,168 450,208" fill="none" stroke="#e8590c" stroke-width="2.2" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#head)"/>
+<path d="M320,210 Q430.0,150 540,208" fill="none" stroke="#e8590c" stroke-width="2.2" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#head)"/>
+<path d="M800,210 Q740.0,168 680,208" fill="none" stroke="#e8590c" stroke-width="2.2" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#head)"/>
+<path d="M386,372 L386,380 L744,380 L744,372" fill="none" stroke="#e8590c" stroke-width="1.6"/>
+<text x="565" y="404" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" fill="#1d2433">phone link dropped: coordinates borrowed from the nearest neighbour in time</text>
+<text x="1170" y="384" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#6b7280">no donor within</text>
+<text x="1170" y="402" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#6b7280">30 min: left alone</text>
+</svg>
